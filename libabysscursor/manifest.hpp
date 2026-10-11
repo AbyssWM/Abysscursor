@@ -23,14 +23,14 @@ class CManifest {
 
   private:
     enum eParser {
-        PARSER_HYPRLANG = 0,
+        PARSER_ABYSSPARSE = 0,
         PARSER_TOML
     };
 
     std::optional<std::string> parseHL();
     std::optional<std::string> parseTOML();
 
-    eParser                    selectedParser = PARSER_HYPRLANG;
+    eParser                    selectedParser = PARSER_ABYSSPARSE;
 
     std::string                path;
 };

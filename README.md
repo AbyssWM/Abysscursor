@@ -1,58 +1,52 @@
-## hyprcursor
-The hyprland cursor format, library and utilities.
+<div align="center">
 
-## Why?
+<img src="https://github.com/AbyssWM.png?size=200" width="160" alt="Abyss logo">
 
-XCursor sucks, and we still use it today.
- - Scaling of XCursors is horrible
- - XCursor does not support vector cursors
- - XCursor is ridiculously space-inefficient
+# Abysscursor
 
-Hyprcursor fixes all three. It's an efficient cursor theme format that
-doesn't suck as much.
+**Cursor theme format and library for Abyssland.**
 
-### Notable advantages over XCursor
- - Automatic scaling according to a configurable, per-cursor method.
- - Support for SVG cursors
- - Way more space-efficient. As an example, Bibata-XCursor is 44.1MB, while it's 6.6MB in hyprcursor.
+Part of [**Abyss**](https://github.com/AbyssWM) · Based on [hyprcursor](https://github.com/hyprwm/hyprcursor) by [hyprwm](https://github.com/hyprwm)
 
-## Documentation
-See the [wiki here](https://wiki.hyprland.org/Hypr-Ecosystem/hyprcursor/)
-check out [docs/](./docs)
-and [standards](https://standards.hyprland.org/hyprcursor)
+</div>
 
-## Tools
+---
 
-### hyprcursor-util
+> [!WARNING]
+> **Early development.** Abyss is being rebranded and reworked right now. Nothing is ready for daily use yet.
 
-Utility for creating hyprcursor themes. See its readme in `hyprcursor-util/`
+## About
 
-### libhyprcursor
+Abysscursor loads and renders scalable cursor themes for Abyssland, with crisp cursors at any size.
 
-The library to use for implementing hyprcursors in your compositor or app.
+Abysscursor is a fork of [hyprcursor](https://github.com/hyprwm/hyprcursor). Every Abyss library and tool is forked and renamed, so the whole ecosystem builds and updates as one – independent of system packages.
 
-It provides C and C++ bindings.
+## The Abyss ecosystem
 
-### Examples
+| Repository | Based on |
+|---|---|
+| [Abyssland](https://github.com/AbyssWM/Abyssland) | [Hyprland](https://github.com/hyprwm/Hyprland) |
+| [Abyssal](https://github.com/AbyssWM/Abyssal) | [aquamarine](https://github.com/hyprwm/aquamarine) |
+| [Abyssutils](https://github.com/AbyssWM/Abyssutils) | [hyprutils](https://github.com/hyprwm/hyprutils) |
+| [Abyssparse](https://github.com/AbyssWM/Abyssparse) | [hyprlang](https://github.com/hyprwm/hyprlang) |
+| **Abysscursor** | [hyprcursor](https://github.com/hyprwm/hyprcursor) |
+| [Abyssgraphics](https://github.com/AbyssWM/Abyssgraphics) | [hyprgraphics](https://github.com/hyprwm/hyprgraphics) |
+| [Abysswire](https://github.com/AbyssWM/Abysswire) | [hyprwire](https://github.com/hyprwm/hyprwire) |
+| [Abyss-scanner](https://github.com/AbyssWM/Abyss-scanner) | [hyprwayland-scanner](https://github.com/hyprwm/hyprwayland-scanner) |
+| [Abyssland-protocols](https://github.com/AbyssWM/Abyssland-protocols) | [hyprland-protocols](https://github.com/hyprwm/hyprland-protocols) |
+| [Xdg-desktop-portal-abyss](https://github.com/AbyssWM/Xdg-desktop-portal-abyss) | [xdg-desktop-portal-hyprland](https://github.com/hyprwm/xdg-desktop-portal-hyprland) |
 
-For both C and C++, see `tests/`.
+## Credits
 
-## Building
+Abysscursor exists thanks to **[hyprcursor](https://github.com/hyprwm/hyprcursor)**, created by **Hypr Development** at **[hyprwm](https://github.com/hyprwm)**. All credit for the original work goes to them – please support the original project.
 
-### Deps:
- - hyprlang >= 0.4.2
- - cairo
- - libzip
- - librsvg
- - tomlplusplus
+Abyss is an independent project and is **not affiliated with or endorsed by hyprwm**.
 
-### Build
-```sh
-cmake --no-warn-unused-cli -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_INSTALL_PREFIX:PATH=/usr -S . -B ./build
-cmake --build ./build --config Release --target all -j`nproc 2>/dev/null || getconf _NPROCESSORS_CONF`
-```
+## License
 
-Install with:
-```sh
-sudo cmake --install build
-```
+This project is licensed under the **BSD 3-Clause License**. The original copyright notice is kept in [`LICENSE`](LICENSE) as required.
+
+## Contributors
+
+- [bb8TheRobot](https://github.com/bb8TheRobot)
+- Claude (Anthropic) – AI pair programmer

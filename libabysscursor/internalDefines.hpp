@@ -35,14 +35,14 @@ struct SLoadedCursorShape {
     std::vector<std::unique_ptr<SLoadedCursorImage>> images;
 };
 
-class CHyprcursorImplementation {
+class CAbysscursorImplementation {
   public:
-    CHyprcursorImplementation(Hyprcursor::CHyprcursorManager* mgr, PHYPRCURSORLOGFUNC fn) : owner(mgr), logFn(fn) {
+    CAbysscursorImplementation(Abysscursor::CAbysscursorManager* mgr, PABYSSCURSORLOGFUNC fn) : owner(mgr), logFn(fn) {
         ;
     }
 
-    Hyprcursor::CHyprcursorManager* owner = nullptr;
-    PHYPRCURSORLOGFUNC              logFn = nullptr;
+    Abysscursor::CAbysscursorManager* owner = nullptr;
+    PABYSSCURSORLOGFUNC              logFn = nullptr;
 
     std::string                     themeName;
     std::string                     themeFullDir;

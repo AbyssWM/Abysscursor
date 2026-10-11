@@ -1,7 +1,7 @@
 #include <cairo/cairo.h>
 
-#ifndef HYPRCURSOR_SHARED_H
-#define HYPRCURSOR_SHARED_H
+#ifndef ABYSSCURSOR_SHARED_H
+#define ABYSSCURSOR_SHARED_H
 
 /*!
     struct for a single cursor image
@@ -14,9 +14,9 @@ struct SCursorImageData {
     int              hotspotY;
 };
 
-typedef struct SCursorImageData hyprcursor_cursor_image_data;
+typedef struct SCursorImageData abysscursor_cursor_image_data;
 
-enum eHyprcursorLogLevel {
+enum eAbysscursorLogLevel {
     HC_LOG_NONE = 0,
     HC_LOG_TRACE,
     HC_LOG_INFO,
@@ -25,12 +25,12 @@ enum eHyprcursorLogLevel {
     HC_LOG_CRITICAL,
 };
 
-enum eHyprcursorDataType {
+enum eAbysscursorDataType {
     HC_DATA_PNG = 0,
     HC_DATA_SVG,
 };
 
-enum eHyprcursorResizeAlgo {
+enum eAbysscursorResizeAlgo {
     HC_RESIZE_INVALID = 0,
     HC_RESIZE_NONE,
     HC_RESIZE_BILINEAR,
@@ -44,7 +44,7 @@ struct SCursorRawShapeImageC {
     int               delay;
 };
 
-typedef struct SCursorRawShapeImageC hyprcursor_cursor_raw_shape_image;
+typedef struct SCursorRawShapeImageC abysscursor_cursor_raw_shape_image;
 
 struct SCursorRawShapeDataC {
     struct SCursorRawShapeImageC* images;
@@ -52,16 +52,16 @@ struct SCursorRawShapeDataC {
     float                         hotspotX;
     float                         hotspotY;
     char*                         overridenBy;
-    enum eHyprcursorResizeAlgo    resizeAlgo;
-    enum eHyprcursorDataType      type;
+    enum eAbysscursorResizeAlgo    resizeAlgo;
+    enum eAbysscursorDataType      type;
     float                         nominalSize;
 };
 
-typedef struct SCursorRawShapeDataC hyprcursor_cursor_raw_shape_data;
+typedef struct SCursorRawShapeDataC abysscursor_cursor_raw_shape_data;
 
 /*
     msg is owned by the caller and will be freed afterwards.
 */
-typedef void (*PHYPRCURSORLOGFUNC)(enum eHyprcursorLogLevel level, char* msg);
+typedef void (*PABYSSCURSORLOGFUNC)(enum eAbysscursorLogLevel level, char* msg);
 
 #endif

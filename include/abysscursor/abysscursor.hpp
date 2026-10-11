@@ -6,9 +6,9 @@
 
 #include "shared.h"
 
-class CHyprcursorImplementation;
+class CAbysscursorImplementation;
 
-namespace Hyprcursor {
+namespace Abysscursor {
 
     /*!
         Simple struct for styles
@@ -30,7 +30,7 @@ namespace Hyprcursor {
     };
 
     /*!
-        C++ structs for hyprcursor_cursor_raw_shape_image and hyprcursor_cursor_raw_shape_data
+        C++ structs for abysscursor_cursor_raw_shape_image and abysscursor_cursor_raw_shape_data
     */
     struct SCursorRawShapeImage {
         std::vector<unsigned char> data;
@@ -43,8 +43,8 @@ namespace Hyprcursor {
         float                             hotspotX    = 0;
         float                             hotspotY    = 0;
         std::string                       overridenBy = "";
-        eHyprcursorResizeAlgo             resizeAlgo  = HC_RESIZE_NONE;
-        eHyprcursorDataType               type        = HC_DATA_PNG;
+        eAbysscursorResizeAlgo             resizeAlgo  = HC_RESIZE_NONE;
+        eAbysscursorDataType               type        = HC_DATA_PNG;
     };
 
     /*!
@@ -56,7 +56,7 @@ namespace Hyprcursor {
         /*!
             The function used for logging by the cursor manager
         */
-        PHYPRCURSORLOGFUNC logFn;
+        PABYSSCURSORLOGFUNC logFn;
         /*!
             Allow fallback to env and first theme found
         */
@@ -64,7 +64,7 @@ namespace Hyprcursor {
     };
 
     /*!
-        Basic Hyprcursor manager.
+        Basic Abysscursor manager.
 
         Has to be created for either a specified theme, or
         nullptr if you want to use a default from the env.
@@ -77,15 +77,15 @@ namespace Hyprcursor {
 
         If theme has no valid cursor shapes, bool valid() will be false.
     */
-    class CHyprcursorManager {
+    class CAbysscursorManager {
       public:
-        CHyprcursorManager(const char* themeName);
+        CAbysscursorManager(const char* themeName);
         /*!
             \since 0.1.6
         */
-        CHyprcursorManager(const char* themeName, PHYPRCURSORLOGFUNC fn);
-        CHyprcursorManager(const char* themeName, SManagerOptions options);
-        ~CHyprcursorManager();
+        CAbysscursorManager(const char* themeName, PABYSSCURSORLOGFUNC fn);
+        CAbysscursorManager(const char* themeName, SManagerOptions options);
+        ~CAbysscursorManager();
 
         /*!
             Returns true if the theme was successfully loaded,
@@ -181,20 +181,20 @@ namespace Hyprcursor {
             \since 0.1.6
 
             Registers a logging function to this manager.
-            PHYPRCURSORLOGFUNC's msg is owned by the caller and will be freed afterwards.
+            PABYSSCURSORLOGFUNC's msg is owned by the caller and will be freed afterwards.
             fn can be null to unregister a logger.
         */
-        void registerLoggingFunction(PHYPRCURSORLOGFUNC fn);
+        void registerLoggingFunction(PABYSSCURSORLOGFUNC fn);
 
       private:
         void                       init(const char* themeName_);
 
-        CHyprcursorImplementation* impl                 = nullptr;
+        CAbysscursorImplementation* impl                 = nullptr;
         bool                       finalizedAndValid    = false;
         bool                       allowDefaultFallback = true;
-        PHYPRCURSORLOGFUNC         logFn                = nullptr;
+        PABYSSCURSORLOGFUNC         logFn                = nullptr;
 
-        friend class CHyprcursorImplementation;
+        friend class CAbysscursorImplementation;
     };
 
 }

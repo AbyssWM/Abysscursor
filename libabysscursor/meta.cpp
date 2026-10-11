@@ -1,6 +1,6 @@
 #include "meta.hpp"
 
-#include <hyprlang.hpp>
+#include <abyssparse.hpp>
 #include <toml++/toml.hpp>
 #include <filesystem>
 #include <regex>
@@ -10,7 +10,7 @@
 
 static CMeta* currentMeta = nullptr;
 
-CMeta::CMeta(const std::string& rawdata_, bool hyprlang_ /* false for toml */, bool dataIsPath) : dataPath(dataIsPath), hyprlang(hyprlang_), rawdata(rawdata_) {
+CMeta::CMeta(const std::string& rawdata_, bool abyssparse_ /* false for toml */, bool dataIsPath) : dataPath(dataIsPath), abyssparse(abyssparse_), rawdata(rawdata_) {
     if (!dataIsPath)
         return;
 
@@ -19,13 +19,13 @@ CMeta::CMeta(const std::string& rawdata_, bool hyprlang_ /* false for toml */, b
     try {
         if (std::filesystem::exists(rawdata_ + ".hl")) {
             rawdata  = rawdata_ + ".hl";
-            hyprlang = true;
+            abyssparse = true;
             return;
         }
 
         if (std::filesystem::exists(rawdata_ + ".toml")) {
             rawdata  = rawdata_ + ".toml";
-            hyprlang = false;
+            abyssparse = false;
             return;
         }
     } catch (...) {}
@@ -39,7 +39,7 @@ std::optional<std::string> CMeta::parse() {
 
     currentMeta = this;
 
-    if (hyprlang)
+    if (abyssparse)
         res = parseHL();
     else
         res = parseTOML();
@@ -68,8 +68,8 @@ static std::string removeBeginEndSpacesTabs(std::string str) {
     return str;
 }
 
-static Hyprlang::CParseResult parseDefineSize(const char* C, const char* V) {
-    Hyprlang::CParseResult result;
+static Abyssparse::CParseResult parseDefineSize(const char* C, const char* V) {
+    Abyssparse::CParseResult result;
     const std::string      VALUE = V;
 
     CVarList               sizes(VALUE, 0, ';');
@@ -123,8 +123,8 @@ static Hyprlang::CParseResult parseDefineSize(const char* C, const char* V) {
     return result;
 }
 
-static Hyprlang::CParseResult parseOverride(const char* C, const char* V) {
-    Hyprlang::CParseResult result;
+static Abyssparse::CParseResult parseOverride(const char* C, const char* V) {
+    Abyssparse::CParseResult result;
     const std::string      VALUE = V;
 
     CVarList               overrides(VALUE, 0, ';');
@@ -137,14 +137,14 @@ static Hyprlang::CParseResult parseOverride(const char* C, const char* V) {
 }
 
 std::optional<std::string> CMeta::parseHL() {
-    std::unique_ptr<Hyprlang::CConfig> meta;
+    std::unique_ptr<Abyssparse::CConfig> meta;
 
     try {
-        meta = std::make_unique<Hyprlang::CConfig>(rawdata.c_str(), Hyprlang::SConfigOptions{.pathIsStream = !dataPath});
-        meta->addConfigValue("hotspot_x", Hyprlang::FLOAT{0.F});
-        meta->addConfigValue("hotspot_y", Hyprlang::FLOAT{0.F});
-        meta->addConfigValue("nominal_size", Hyprlang::FLOAT{1.F});
-        meta->addConfigValue("resize_algorithm", Hyprlang::STRING{"nearest"});
+        meta = std::make_unique<Abyssparse::CConfig>(rawdata.c_str(), Abyssparse::SConfigOptions{.pathIsStream = !dataPath});
+        meta->addConfigValue("hotspot_x", Abyssparse::FLOAT{0.F});
+        meta->addConfigValue("hotspot_y", Abyssparse::FLOAT{0.F});
+        meta->addConfigValue("nominal_size", Abyssparse::FLOAT{1.F});
+        meta->addConfigValue("resize_algorithm", Abyssparse::STRING{"nearest"});
         meta->registerHandler(::parseDefineSize, "define_size", {.allowFlags = false});
         meta->registerHandler(::parseOverride, "define_override", {.allowFlags = false});
         meta->commence();
@@ -153,10 +153,10 @@ std::optional<std::string> CMeta::parseHL() {
             return RESULT.getError();
     } catch (const char* err) { return "failed parsing meta: " + std::string{err}; }
 
-    parsedData.hotspotX    = std::any_cast<Hyprlang::FLOAT>(meta->getConfigValue("hotspot_x"));
-    parsedData.hotspotY    = std::any_cast<Hyprlang::FLOAT>(meta->getConfigValue("hotspot_y"));
-    parsedData.nominalSize = std::clamp(std::any_cast<Hyprlang::FLOAT>(meta->getConfigValue("nominal_size")), 0.1F, 2.F);
-    parsedData.resizeAlgo  = std::any_cast<Hyprlang::STRING>(meta->getConfigValue("resize_algorithm"));
+    parsedData.hotspotX    = std::any_cast<Abyssparse::FLOAT>(meta->getConfigValue("hotspot_x"));
+    parsedData.hotspotY    = std::any_cast<Abyssparse::FLOAT>(meta->getConfigValue("hotspot_y"));
+    parsedData.nominalSize = std::clamp(std::any_cast<Abyssparse::FLOAT>(meta->getConfigValue("nominal_size")), 0.1F, 2.F);
+    parsedData.resizeAlgo  = std::any_cast<Abyssparse::STRING>(meta->getConfigValue("resize_algorithm"));
 
     return {};
 }

@@ -1,4 +1,4 @@
-#include "hyprcursor/hyprcursor.hpp"
+#include "abysscursor/abysscursor.hpp"
 #include "internalSharedTypes.hpp"
 #include "internalDefines.hpp"
 #include <array>
@@ -16,7 +16,7 @@
 #include "meta.hpp"
 #include "Log.hpp"
 
-using namespace Hyprcursor;
+using namespace Abysscursor;
 
 static std::vector<std::string> getSystemThemeDirs() {
     const auto               envXdgData = std::getenv("XDG_DATA_DIRS");
@@ -37,8 +37,8 @@ constexpr const std::array<const char*, 2> userThemeDirs   = {"/.local/share/ico
 
 //
 
-static std::string themeNameFromEnv(PHYPRCURSORLOGFUNC logfn) {
-    const auto ENV = getenv("HYPRCURSOR_THEME");
+static std::string themeNameFromEnv(PABYSSCURSORLOGFUNC logfn) {
+    const auto ENV = getenv("ABYSSCURSOR_THEME");
     if (!ENV) {
         Debug::log(HC_LOG_INFO, logfn, "themeNameFromEnv: env unset");
         return "";
@@ -61,7 +61,7 @@ static bool themeAccessible(const std::string& path) {
     return pathAccessible(path + "/manifest.hl") || pathAccessible(path + "/manifest.toml");
 }
 
-static std::string getFirstTheme(PHYPRCURSORLOGFUNC logfn) {
+static std::string getFirstTheme(PABYSSCURSORLOGFUNC logfn) {
     // try user directories first
 
     const auto HOMEENV = getenv("HOME");
@@ -125,7 +125,7 @@ static std::string getFirstTheme(PHYPRCURSORLOGFUNC logfn) {
     return "";
 }
 
-static std::string getFullPathForThemeName(const std::string& name, PHYPRCURSORLOGFUNC logfn, bool allowDefaultFallback) {
+static std::string getFullPathForThemeName(const std::string& name, PABYSSCURSORLOGFUNC logfn, bool allowDefaultFallback) {
     const auto HOMEENV = getenv("HOME");
     if (!HOMEENV)
         return "";
@@ -222,41 +222,41 @@ SManagerOptions::SManagerOptions() : logFn(nullptr), allowDefaultFallback(true) 
     ;
 }
 
-CHyprcursorManager::CHyprcursorManager(const char* themeName_) {
+CAbysscursorManager::CAbysscursorManager(const char* themeName_) {
     init(themeName_);
 }
 
-CHyprcursorManager::CHyprcursorManager(const char* themeName_, PHYPRCURSORLOGFUNC fn) : logFn(fn) {
+CAbysscursorManager::CAbysscursorManager(const char* themeName_, PABYSSCURSORLOGFUNC fn) : logFn(fn) {
     init(themeName_);
 }
 
-CHyprcursorManager::CHyprcursorManager(const char* themeName_, SManagerOptions options) : allowDefaultFallback(options.allowDefaultFallback), logFn(options.logFn) {
+CAbysscursorManager::CAbysscursorManager(const char* themeName_, SManagerOptions options) : allowDefaultFallback(options.allowDefaultFallback), logFn(options.logFn) {
     init(themeName_);
 }
 
-void CHyprcursorManager::init(const char* themeName_) {
+void CAbysscursorManager::init(const char* themeName_) {
     std::string themeName = themeName_ ? themeName_ : "";
 
     if (allowDefaultFallback && themeName.empty()) {
         // try reading from env
-        Debug::log(HC_LOG_INFO, logFn, "CHyprcursorManager: attempting to find theme from env");
+        Debug::log(HC_LOG_INFO, logFn, "CAbysscursorManager: attempting to find theme from env");
         themeName = themeNameFromEnv(logFn);
     }
 
     if (allowDefaultFallback && themeName.empty()) {
         // try finding first, in the hierarchy
-        Debug::log(HC_LOG_INFO, logFn, "CHyprcursorManager: attempting to find any theme");
+        Debug::log(HC_LOG_INFO, logFn, "CAbysscursorManager: attempting to find any theme");
         themeName = getFirstTheme(logFn);
     }
 
     if (themeName.empty()) {
         // holy shit we're done
-        Debug::log(HC_LOG_INFO, logFn, "CHyprcursorManager: no themes matched");
+        Debug::log(HC_LOG_INFO, logFn, "CAbysscursorManager: no themes matched");
         return;
     }
 
     // initialize theme
-    impl               = new CHyprcursorImplementation(this, logFn);
+    impl               = new CAbysscursorImplementation(this, logFn);
     impl->themeName    = themeName;
     impl->themeFullDir = getFullPathForThemeName(themeName, logFn, allowDefaultFallback);
 
@@ -280,15 +280,15 @@ void CHyprcursorManager::init(const char* themeName_) {
     finalizedAndValid = true;
 }
 
-CHyprcursorManager::~CHyprcursorManager() {
+CAbysscursorManager::~CAbysscursorManager() {
     delete impl;
 }
 
-bool CHyprcursorManager::valid() {
+bool CAbysscursorManager::valid() {
     return finalizedAndValid;
 }
 
-SCursorImageData** CHyprcursorManager::getShapesC(int& outSize, const char* shape_, const SCursorStyleInfo& info) {
+SCursorImageData** CAbysscursorManager::getShapesC(int& outSize, const char* shape_, const SCursorStyleInfo& info) {
     if (!shape_) {
         Debug::log(HC_LOG_ERR, logFn, "getShapesC: shape of nullptr is invalid");
         return nullptr;
@@ -377,7 +377,7 @@ SCursorImageData** CHyprcursorManager::getShapesC(int& outSize, const char* shap
     return data;
 }
 
-SCursorRawShapeDataC* CHyprcursorManager::getRawShapeDataC(const char* shape_) {
+SCursorRawShapeDataC* CAbysscursorManager::getRawShapeDataC(const char* shape_) {
     if (!shape_) {
         Debug::log(HC_LOG_ERR, logFn, "getShapeDataC: shape of nullptr is invalid");
         return nullptr;
@@ -393,8 +393,8 @@ SCursorRawShapeDataC* CHyprcursorManager::getRawShapeDataC(const char* shape_) {
     data->hotspotX    = 0.f;
     data->hotspotY    = 0.F;
     data->nominalSize = 1.F;
-    data->resizeAlgo  = eHyprcursorResizeAlgo::HC_RESIZE_NONE;
-    data->type        = eHyprcursorDataType::HC_DATA_PNG;
+    data->resizeAlgo  = eAbysscursorResizeAlgo::HC_RESIZE_NONE;
+    data->type        = eAbysscursorDataType::HC_DATA_PNG;
 
     for (auto& shape : impl->theme.shapes) {
         // if it's overridden just return the override
@@ -437,7 +437,7 @@ SCursorRawShapeDataC* CHyprcursorManager::getRawShapeDataC(const char* shape_) {
     return data;
 }
 
-bool CHyprcursorManager::loadThemeStyle(const SCursorStyleInfo& info) {
+bool CAbysscursorManager::loadThemeStyle(const SCursorStyleInfo& info) {
     Debug::log(HC_LOG_INFO, logFn, "loadThemeStyle: loading for size {}", info.size);
 
     for (auto& shape : impl->theme.shapes) {
@@ -586,7 +586,7 @@ bool CHyprcursorManager::loadThemeStyle(const SCursorStyleInfo& info) {
     return true;
 }
 
-void CHyprcursorManager::cursorSurfaceStyleDone(const SCursorStyleInfo& info) {
+void CAbysscursorManager::cursorSurfaceStyleDone(const SCursorStyleInfo& info) {
     for (auto& shape : impl->theme.shapes) {
         if (shape->resizeAlgo == HC_RESIZE_NONE && shape->shapeType != SHAPE_SVG)
             continue;
@@ -608,7 +608,7 @@ void CHyprcursorManager::cursorSurfaceStyleDone(const SCursorStyleInfo& info) {
     }
 }
 
-void CHyprcursorManager::registerLoggingFunction(PHYPRCURSORLOGFUNC fn) {
+void CAbysscursorManager::registerLoggingFunction(PABYSSCURSORLOGFUNC fn) {
     logFn = fn;
 }
 
@@ -641,7 +641,7 @@ General
 
 */
 
-std::optional<std::string> CHyprcursorImplementation::loadTheme() {
+std::optional<std::string> CAbysscursorImplementation::loadTheme() {
 
     if (!themeAccessible(themeFullDir))
         return "Theme inaccessible";
@@ -790,7 +790,7 @@ std::optional<std::string> CHyprcursorImplementation::loadTheme() {
     return {};
 }
 
-std::vector<SLoadedCursorImage*> CHyprcursorImplementation::getFramesFor(SCursorShape* shape, int size) {
+std::vector<SLoadedCursorImage*> CAbysscursorImplementation::getFramesFor(SCursorShape* shape, int size) {
     std::vector<SLoadedCursorImage*> frames;
 
     for (auto& image : loadedShapes[shape].images) {

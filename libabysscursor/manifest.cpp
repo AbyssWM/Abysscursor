@@ -1,7 +1,7 @@
 #include "manifest.hpp"
 
 #include <toml++/toml.hpp>
-#include <hyprlang.hpp>
+#include <abyssparse.hpp>
 
 #include <filesystem>
 
@@ -9,7 +9,7 @@ CManifest::CManifest(const std::string& path_) {
     try {
         if (std::filesystem::exists(path_ + ".hl")) {
             path           = path_ + ".hl";
-            selectedParser = PARSER_HYPRLANG;
+            selectedParser = PARSER_ABYSSPARSE;
             return;
         }
 
@@ -25,7 +25,7 @@ std::optional<std::string> CManifest::parse() {
     if (path.empty())
         return "Failed to find an appropriate manifest.";
 
-    if (selectedParser == PARSER_HYPRLANG)
+    if (selectedParser == PARSER_ABYSSPARSE)
         return parseHL();
     if (selectedParser == PARSER_TOML)
         return parseTOML();
@@ -34,24 +34,24 @@ std::optional<std::string> CManifest::parse() {
 }
 
 std::optional<std::string> CManifest::parseHL() {
-    std::unique_ptr<Hyprlang::CConfig> manifest;
+    std::unique_ptr<Abyssparse::CConfig> manifest;
     try {
         // TODO: unify this between util and lib
-        manifest = std::make_unique<Hyprlang::CConfig>(path.c_str(), Hyprlang::SConfigOptions{.throwAllErrors = true});
-        manifest->addConfigValue("cursors_directory", Hyprlang::STRING{""});
-        manifest->addConfigValue("name", Hyprlang::STRING{""});
-        manifest->addConfigValue("description", Hyprlang::STRING{""});
-        manifest->addConfigValue("version", Hyprlang::STRING{""});
-        manifest->addConfigValue("author", Hyprlang::STRING{""});
+        manifest = std::make_unique<Abyssparse::CConfig>(path.c_str(), Abyssparse::SConfigOptions{.throwAllErrors = true});
+        manifest->addConfigValue("cursors_directory", Abyssparse::STRING{""});
+        manifest->addConfigValue("name", Abyssparse::STRING{""});
+        manifest->addConfigValue("description", Abyssparse::STRING{""});
+        manifest->addConfigValue("version", Abyssparse::STRING{""});
+        manifest->addConfigValue("author", Abyssparse::STRING{""});
         manifest->commence();
         manifest->parse();
     } catch (const char* err) { return std::string{"failed: "} + err; }
 
-    parsedData.cursorsDirectory = std::any_cast<Hyprlang::STRING>(manifest->getConfigValue("cursors_directory"));
-    parsedData.name             = std::any_cast<Hyprlang::STRING>(manifest->getConfigValue("name"));
-    parsedData.description      = std::any_cast<Hyprlang::STRING>(manifest->getConfigValue("description"));
-    parsedData.version          = std::any_cast<Hyprlang::STRING>(manifest->getConfigValue("version"));
-    parsedData.author           = std::any_cast<Hyprlang::STRING>(manifest->getConfigValue("author"));
+    parsedData.cursorsDirectory = std::any_cast<Abyssparse::STRING>(manifest->getConfigValue("cursors_directory"));
+    parsedData.name             = std::any_cast<Abyssparse::STRING>(manifest->getConfigValue("name"));
+    parsedData.description      = std::any_cast<Abyssparse::STRING>(manifest->getConfigValue("description"));
+    parsedData.version          = std::any_cast<Abyssparse::STRING>(manifest->getConfigValue("version"));
+    parsedData.author           = std::any_cast<Abyssparse::STRING>(manifest->getConfigValue("author"));
 
     return {};
 }

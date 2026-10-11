@@ -9,7 +9,7 @@
 */
 class CMeta {
   public:
-    CMeta(const std::string& rawdata_, bool hyprlang_ /* false for toml */, bool dataIsPath = false);
+    CMeta(const std::string& rawdata_, bool abyssparse_ /* false for toml */, bool dataIsPath = false);
 
     std::optional<std::string> parse();
 
@@ -30,7 +30,7 @@ class CMeta {
     std::optional<std::string> parseTOML();
 
     bool                       dataPath = false;
-    bool                       hyprlang = true;
+    bool                       abyssparse = true;
 
     std::string                rawdata;
 };

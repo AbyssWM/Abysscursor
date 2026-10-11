@@ -1,0 +1,10 @@
+prefix=@PREFIX@
+includedir=@INCLUDE@
+libdir=@LIBDIR@
+
+Name: abysscursor
+URL: https://github.com/AbyssWM/abysscursor
+Description: A library and toolkit for the Abyssland cursor format
+Version: @ABYSSCURSOR_VERSION@
+Cflags: -I${includedir}
+Libs: -L${libdir} -labysscursor

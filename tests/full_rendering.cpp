@@ -3,13 +3,13 @@
     full_rendering.cpp
 
     This example shows probably what you want to do.
-    Hyprcursor will render a left_ptr shape at 48x48px to a file called /tmp/arrow.png
+    Abysscursor will render a left_ptr shape at 48x48px to a file called /tmp/arrow.png
 */
 
 #include <iostream>
-#include <hyprcursor/hyprcursor.hpp>
+#include <abysscursor/abysscursor.hpp>
 
-void logFunction(enum eHyprcursorLogLevel level, char* message) {
+void logFunction(enum eAbysscursorLogLevel level, char* message) {
     std::cout << "[hc] " << message << "\n";
 }
 
@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
     /*
         Create a manager. You can optionally pass a logger function.
     */
-    Hyprcursor::CHyprcursorManager mgr(nullptr, logFunction);
+    Abysscursor::CAbysscursorManager mgr(nullptr, logFunction);
 
     /*
         Manager could be invalid if no themes were found, or
@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
         Remember to free styles once you're done with them 
         (e.g. the user requested to change the cursor size to something else)
     */
-    Hyprcursor::SCursorStyleInfo style{.size = 48};
+    Abysscursor::SCursorStyleInfo style{.size = 48};
     if (!mgr.loadThemeStyle(style)) {
         std::cout << "failed loading style\n";
         return 1;
@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    std::cout << "hyprcursor returned " << SHAPEDATA.images.size() << " images\n";
+    std::cout << "abysscursor returned " << SHAPEDATA.images.size() << " images\n";
 
     /*
         Save to disk with cairo

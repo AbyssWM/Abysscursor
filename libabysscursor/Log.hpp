@@ -4,14 +4,14 @@
 #include <format>
 #include <iostream>
 
-#include <hyprcursor/shared.h>
+#include <abysscursor/shared.h>
 
 namespace Debug {
     inline bool quiet   = false;
     inline bool verbose = false;
 
     template <typename... Args>
-    void log(eHyprcursorLogLevel level, PHYPRCURSORLOGFUNC fn, const std::string& fmt, Args&&... args) {
+    void log(eAbysscursorLogLevel level, PABYSSCURSORLOGFUNC fn, const std::string& fmt, Args&&... args) {
         if (!fn)
             return;
 

@@ -7,7 +7,7 @@
 #include <format>
 #include <algorithm>
 #include <regex>
-#include <hyprlang.hpp>
+#include <abyssparse.hpp>
 #include "internalSharedTypes.hpp"
 #include "manifest.hpp"
 #include "meta.hpp"
@@ -21,7 +21,7 @@ enum eOperation : uint8_t {
     OPERATION_EXTRACT = 1,
 };
 
-static eHyprcursorResizeAlgo explicitResizeAlgo = HC_RESIZE_INVALID;
+static eAbysscursorResizeAlgo explicitResizeAlgo = HC_RESIZE_INVALID;
 
 struct XCursorConfigEntry {
     int         size = 0, hotspotX = 0, hotspotY = 0, delay = 0;
@@ -57,7 +57,7 @@ static bool promptForDeletion(const std::string& path) {
     }
 
     if (!std::filesystem::exists(path + "/manifest.hl") && !std::filesystem::exists(path + "/manifest.toml") && std::filesystem::exists(path) && !emptyDirectory) {
-        std::cout << "Refusing to remove " << path << " because it doesn't look like a hyprcursor theme.\n"
+        std::cout << "Refusing to remove " << path << " because it doesn't look like a abysscursor theme.\n"
                   << "Please set a valid, empty, nonexistent, or a theme directory as an output path\n";
         exit(1);
     }
@@ -262,16 +262,16 @@ static std::optional<std::string> extractXTheme(const std::string& xpath_, const
     if (!manifest.good())
         return "failed writing manifest";
 
-    manifest << "name = Extracted Theme\ndescription = Automatically extracted with hyprcursor-util\nversion = 0.1\ncursors_directory = hyprcursors\n";
+    manifest << "name = Extracted Theme\ndescription = Automatically extracted with abysscursor-util\nversion = 0.1\ncursors_directory = abysscursors\n";
 
     manifest.close();
 
     // make a cursors dir
 
-    std::filesystem::create_directory(out + "/hyprcursors/");
+    std::filesystem::create_directory(out + "/abysscursors/");
 
     // create a temp extract dir
-    std::filesystem::create_directory("/tmp/hyprcursor-util/");
+    std::filesystem::create_directory("/tmp/abysscursor-util/");
 
     // write all cursors
     for (auto& xcursor : std::filesystem::directory_iterator(xpath + "/cursors/")) {
@@ -279,18 +279,18 @@ static std::optional<std::string> extractXTheme(const std::string& xpath_, const
         if (!xcursor.is_regular_file() || xcursor.is_symlink())
             continue;
 
-        const auto CURSORDIR = out + "/hyprcursors/" + xcursor.path().stem().string();
+        const auto CURSORDIR = out + "/abysscursors/" + xcursor.path().stem().string();
         std::filesystem::create_directory(CURSORDIR);
 
         std::cout << "Found xcursor " << xcursor.path().stem().string() << "\n";
 
         // decompile xcursor
-        const auto OUT = spawnSync(std::format("rm -f /tmp/hyprcursor-util/* && cd /tmp/hyprcursor-util && xcur2png '{}' -d /tmp/hyprcursor-util 2>&1",
+        const auto OUT = spawnSync(std::format("rm -f /tmp/abysscursor-util/* && cd /tmp/abysscursor-util && xcur2png '{}' -d /tmp/abysscursor-util 2>&1",
                                                std::filesystem::canonical(xcursor.path()).string()));
 
         // read the config
         std::vector<XCursorConfigEntry> entries;
-        std::ifstream                   xconfig("/tmp/hyprcursor-util/" + xcursor.path().stem().string() + ".conf");
+        std::ifstream                   xconfig("/tmp/abysscursor-util/" + xcursor.path().stem().string() + ".conf");
         if (!xconfig.good())
             return "Failed reading xconfig for " + xcursor.path().string();
 
@@ -331,7 +331,7 @@ static std::optional<std::string> extractXTheme(const std::string& xpath_, const
             return "Empty xcursor " + xcursor.path().string();
 
         // copy pngs
-        for (auto& extracted : std::filesystem::directory_iterator("/tmp/hyprcursor-util")) {
+        for (auto& extracted : std::filesystem::directory_iterator("/tmp/abysscursor-util")) {
             if (extracted.path().string().ends_with(".conf"))
                 continue;
 
@@ -373,7 +373,7 @@ static std::optional<std::string> extractXTheme(const std::string& xpath_, const
         meta.close();
     }
 
-    std::filesystem::remove_all("/tmp/hyprcursor-util/");
+    std::filesystem::remove_all("/tmp/abysscursor-util/");
 
     return {};
 }
@@ -392,7 +392,7 @@ int main(int argc, char** argv, char** envp) {
         std::string arg = argv[i];
 
         if (arg == "-v" || arg == "--version") {
-            std::cout << "hyprcursor-util, built from v" << HYPRCURSOR_VERSION << "\n";
+            std::cout << "abysscursor-util, built from v" << ABYSSCURSOR_VERSION << "\n";
             exit(0);
         }
 

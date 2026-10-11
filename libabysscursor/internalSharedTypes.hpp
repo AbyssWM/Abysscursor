@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <hyprcursor/shared.h>
+#include <abysscursor/shared.h>
 
 enum eShapeType {
     SHAPE_INVALID = 0,
@@ -10,7 +10,7 @@ enum eShapeType {
     SHAPE_SVG,
 };
 
-inline eHyprcursorResizeAlgo stringToAlgo(const std::string& s) {
+inline eAbysscursorResizeAlgo stringToAlgo(const std::string& s) {
     if (s == "none")
         return HC_RESIZE_NONE;
     if (s == "nearest")
@@ -18,7 +18,7 @@ inline eHyprcursorResizeAlgo stringToAlgo(const std::string& s) {
     return HC_RESIZE_BILINEAR;
 }
 
-inline std::string algoToString(const eHyprcursorResizeAlgo a) {
+inline std::string algoToString(const eAbysscursorResizeAlgo a) {
     switch (a) {
         case HC_RESIZE_BILINEAR: return "bilinear";
         case HC_RESIZE_NEAREST: return "nearest";
@@ -38,7 +38,7 @@ struct SCursorImage {
 struct SCursorShape {
     std::string               directory;
     float                     hotspotX = 0, hotspotY = 0, nominalSize = 1.F;
-    eHyprcursorResizeAlgo     resizeAlgo = HC_RESIZE_NEAREST;
+    eAbysscursorResizeAlgo     resizeAlgo = HC_RESIZE_NEAREST;
     std::vector<SCursorImage> images;
     std::vector<std::string>  overrides;
     eShapeType                shapeType = SHAPE_INVALID;

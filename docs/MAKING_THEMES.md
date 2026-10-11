@@ -1,6 +1,6 @@
 ## Creating a theme
 
-Familiarize yourself with the README of `hyprcursor-util`.
+Familiarize yourself with the README of `abysscursor-util`.
 
 ## Creating a theme from an XCursor theme
 
@@ -15,7 +15,7 @@ The directory structure looks like this:
 ```ini
 directory
  ┣ manifest.hl
- ┗ hyprcursors
+ ┗ abysscursors
    ┣ left_ptr
      ┣ image32.png
      ┣ image64.png
@@ -29,12 +29,12 @@ directory
 
 ### Manifest
 
-The manifest describes your theme, in hyprlang:
+The manifest describes your theme, in abyssparse:
 ```ini
 name = My theme!
 description = Very cool!
 version = 0.1
-cursors_directory = hyprcursors # has to match the directory in the structure
+cursors_directory = abysscursors # has to match the directory in the structure
 ```
 
 ### Cursors

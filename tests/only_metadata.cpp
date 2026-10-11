@@ -10,9 +10,9 @@
 */
 
 #include <iostream>
-#include <hyprcursor/hyprcursor.hpp>
+#include <abysscursor/abysscursor.hpp>
 
-void logFunction(enum eHyprcursorLogLevel level, char* message) {
+void logFunction(enum eAbysscursorLogLevel level, char* message) {
     std::cout << "[hc] " << message << "\n";
 }
 
@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
     /*
         Create a manager. You can optionally pass a logger function.
     */
-    Hyprcursor::CHyprcursorManager mgr(nullptr, logFunction);
+    Abysscursor::CAbysscursorManager mgr(nullptr, logFunction);
 
     /*
         Manager could be invalid if no themes were found, or

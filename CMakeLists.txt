@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.19)
 
 file(READ "${CMAKE_SOURCE_DIR}/VERSION" VER_RAW)
-string(STRIP ${VER_RAW} HYPRCURSOR_VERSION)
+string(STRIP ${VER_RAW} ABYSSCURSOR_VERSION)
 
-add_compile_definitions(HYPRCURSOR_VERSION="${HYPRCURSOR_VERSION}")
+add_compile_definitions(ABYSSCURSOR_VERSION="${ABYSSCURSOR_VERSION}")
 
 project(
-  hyprcursor
-  VERSION ${HYPRCURSOR_VERSION}
-  DESCRIPTION "A library and toolkit for the Hyprland cursor format")
+  abysscursor
+  VERSION ${ABYSSCURSOR_VERSION}
+  DESCRIPTION "A library and toolkit for the Abyssland cursor format")
 
 include(CTest)
 include(GNUInstallDirs)
@@ -17,7 +17,7 @@ set(PREFIX ${CMAKE_INSTALL_PREFIX})
 set(INCLUDE ${CMAKE_INSTALL_FULL_INCLUDEDIR})
 set(LIBDIR ${CMAKE_INSTALL_FULL_LIBDIR})
 
-configure_file(hyprcursor.pc.in hyprcursor.pc @ONLY)
+configure_file(abysscursor.pc.in abysscursor.pc @ONLY)
 
 set(CMAKE_CXX_STANDARD 23)
 add_compile_options(
@@ -36,95 +36,95 @@ pkg_check_modules(
   deps
   REQUIRED
   IMPORTED_TARGET
-  hyprlang>=0.4.2
+  abyssparse>=0.4.2
   libzip
   cairo
   librsvg-2.0
   tomlplusplus)
 
 if(CMAKE_BUILD_TYPE MATCHES Debug OR CMAKE_BUILD_TYPE MATCHES DEBUG)
-  message(STATUS "Configuring hyprcursor in Debug")
-  add_compile_definitions(HYPRLAND_DEBUG)
+  message(STATUS "Configuring abysscursor in Debug")
+  add_compile_definitions(ABYSSLAND_DEBUG)
 else()
   add_compile_options(-O3)
-  message(STATUS "Configuring hyprcursor in Release")
+  message(STATUS "Configuring abysscursor in Release")
 endif()
 
 file(
   GLOB_RECURSE
   SRCFILES
   CONFIGURE_DEPENDS
-  "libhyprcursor/*.cpp"
-  "include/hyprcursor/hyprcursor.hpp"
-  "include/hyprcursor/hyprcursor.h"
-  "include/hyprcursor/shared.h")
+  "libabysscursor/*.cpp"
+  "include/abysscursor/abysscursor.hpp"
+  "include/abysscursor/abysscursor.h"
+  "include/abysscursor/shared.h")
 
-add_library(hyprcursor SHARED ${SRCFILES})
+add_library(abysscursor SHARED ${SRCFILES})
 target_include_directories(
-  hyprcursor
+  abysscursor
   PUBLIC "./include"
-  PRIVATE "./libhyprcursor")
+  PRIVATE "./libabysscursor")
 set_target_properties(
-  hyprcursor
-  PROPERTIES VERSION ${hyprcursor_VERSION}
+  abysscursor
+  PROPERTIES VERSION ${abysscursor_VERSION}
              SOVERSION 0
-             PUBLIC_HEADER include/hyprcursor/hyprcursor.hpp
-             include/hyprcursor/hyprcursor.h include/hyprcursor/shared.h)
+             PUBLIC_HEADER include/abysscursor/abysscursor.hpp
+             include/abysscursor/abysscursor.h include/abysscursor/shared.h)
 
-target_link_libraries(hyprcursor PkgConfig::deps)
+target_link_libraries(abysscursor PkgConfig::deps)
 
-# hyprcursor-util
+# abysscursor-util
 file(
   GLOB_RECURSE
   UTILSRCFILES
   CONFIGURE_DEPENDS
-  "hyprcursor-util/src/*.cpp"
-  "include/hyprcursor/hyprcursor.hpp"
-  "include/hyprcursor/hyprcursor.h"
-  "include/hyprcursor/shared.h")
-add_executable(hyprcursor-util ${UTILSRCFILES})
+  "abysscursor-util/src/*.cpp"
+  "include/abysscursor/abysscursor.hpp"
+  "include/abysscursor/abysscursor.h"
+  "include/abysscursor/shared.h")
+add_executable(abysscursor-util ${UTILSRCFILES})
 target_include_directories(
-  hyprcursor-util
+  abysscursor-util
   PUBLIC "./include"
-  PRIVATE "./libhyprcursor" "./hyprcursor-util/src")
-target_link_libraries(hyprcursor-util PkgConfig::deps hyprcursor)
+  PRIVATE "./libabysscursor" "./abysscursor-util/src")
+target_link_libraries(abysscursor-util PkgConfig::deps abysscursor)
 
 # tests
 add_custom_target(tests)
 
-add_executable(hyprcursor_test1 "tests/full_rendering.cpp")
-target_link_libraries(hyprcursor_test1 PRIVATE hyprcursor)
+add_executable(abysscursor_test1 "tests/full_rendering.cpp")
+target_link_libraries(abysscursor_test1 PRIVATE abysscursor)
 add_test(
-  NAME "Test libhyprcursor in C++ (full rendering)"
+  NAME "Test libabysscursor in C++ (full rendering)"
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests
-  COMMAND hyprcursor_test1)
-add_dependencies(tests hyprcursor_test1)
+  COMMAND abysscursor_test1)
+add_dependencies(tests abysscursor_test1)
 
-add_executable(hyprcursor_test2 "tests/only_metadata.cpp")
-target_link_libraries(hyprcursor_test2 PRIVATE hyprcursor)
+add_executable(abysscursor_test2 "tests/only_metadata.cpp")
+target_link_libraries(abysscursor_test2 PRIVATE abysscursor)
 add_test(
-  NAME "Test libhyprcursor in C++ (only metadata)"
+  NAME "Test libabysscursor in C++ (only metadata)"
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests
-  COMMAND hyprcursor_test2)
-add_dependencies(tests hyprcursor_test2)
+  COMMAND abysscursor_test2)
+add_dependencies(tests abysscursor_test2)
 
-add_executable(hyprcursor_test_c "tests/c_test.c")
-target_link_libraries(hyprcursor_test_c PRIVATE hyprcursor)
+add_executable(abysscursor_test_c "tests/c_test.c")
+target_link_libraries(abysscursor_test_c PRIVATE abysscursor)
 add_test(
-  NAME "Test libhyprcursor in C"
+  NAME "Test libabysscursor in C"
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests
-  COMMAND hyprcursor_test_c)
-add_dependencies(tests hyprcursor_test_c)
+  COMMAND abysscursor_test_c)
+add_dependencies(tests abysscursor_test_c)
 
 # Installation
-install(TARGETS hyprcursor)
-install(TARGETS hyprcursor-util)
-install(DIRECTORY "include/hyprcursor" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(FILES ${CMAKE_BINARY_DIR}/hyprcursor.pc
+install(TARGETS abysscursor)
+install(TARGETS abysscursor-util)
+install(DIRECTORY "include/abysscursor" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES ${CMAKE_BINARY_DIR}/abysscursor.pc
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 
 if(INSTALL_TESTS)
-  install(TARGETS hyprcursor_test1)
-  install(TARGETS hyprcursor_test2)
-  install(TARGETS hyprcursor_test_c)
+  install(TARGETS abysscursor_test1)
+  install(TARGETS abysscursor_test2)
+  install(TARGETS abysscursor_test_c)
 endif()

@@ -1,6 +1,6 @@
 ## Usage
 
-Include `hyprcursor/hyprcursor.h` or `.hpp` depending on your language.
+Include `abysscursor/abysscursor.h` or `.hpp` depending on your language.
 
 Read the comments of the API functions
 
