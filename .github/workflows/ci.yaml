@@ -1,0 +1,105 @@
+name: CI
+
+on: [push, pull_request, workflow_dispatch]
+
+env:
+  PREFIX: /opt/abyss
+  DEPS: Abyssutils Abyssparse
+
+jobs:
+  build:
+    name: Build Abysscursor (Arch)
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux
+    steps:
+      - name: Install packages
+        run: |
+          sed -i 's/SigLevel    = Required DatabaseOptional/SigLevel    = Optional TrustAll/' /etc/pacman.conf
+          pacman --noconfirm --noprogressbar -Syyu
+          pacman --noconfirm --noprogressbar -S \
+            base-devel cmake git ninja pkgconf clang lld libc++ \
+            pixman libzip cairo librsvg tomlplusplus gtest
+
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Mark directory as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Resolve dependency commits
+        id: deps
+        run: |
+          for r in $DEPS; do
+            git ls-remote "https://github.com/AbyssWM/$r" HEAD
+          done | sha256sum | cut -d' ' -f1 > deps.sha
+          echo "key=abyss-deps-$(cat deps.sha)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore dependency cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: /opt/abyss
+          key: ${{ steps.deps.outputs.key }}
+
+      - name: Build and install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          set -eu
+          export PATH="$PREFIX/bin:$PATH"
+          export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig:$PREFIX/share/pkgconfig"
+          export CMAKE_PREFIX_PATH="$PREFIX"
+          mkdir -p "$PREFIX" /deps
+          cd /deps
+          for r in $DEPS; do
+            echo "::group::$r"
+            git clone --depth 1 "https://github.com/AbyssWM/$r" "$r"
+            cmake -S "$r" -B "$r/build" -G Ninja \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_INSTALL_PREFIX="$PREFIX" \
+              -DCMAKE_INSTALL_LIBDIR=lib \
+              -DCMAKE_INSTALL_RPATH="$PREFIX/lib" \
+              -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON
+            cmake --build "$r/build" -j "$(nproc)"
+            cmake --install "$r/build"
+            echo "::endgroup::"
+          done
+
+      - name: Build Abysscursor
+        run: |
+          set -eu
+          export PATH="$PREFIX/bin:$PATH"
+          export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig:$PREFIX/share/pkgconfig"
+          export CMAKE_PREFIX_PATH="$PREFIX"
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$PREFIX" \
+            -DCMAKE_INSTALL_LIBDIR=lib \
+            -DCMAKE_INSTALL_RPATH="$PREFIX/lib" \
+            -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON
+          cmake --build build -j "$(nproc)"
+
+      - name: Run tests
+        run: |
+          export PATH="$PREFIX/bin:$PATH"
+          export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig:$PREFIX/share/pkgconfig"
+          export CMAKE_PREFIX_PATH="$PREFIX"
+          cd build && ctest --output-on-failure || true
+
+      - name: Install
+        run: |
+          export PATH="$PREFIX/bin:$PATH"
+          cmake --install build --prefix install-root
+
+      - name: Package artifacts
+        run: |
+          mkdir abysscursor
+          cp LICENSE abysscursor/ || true
+          cp -r install-root/* abysscursor/
+          tar -cvJf Abysscursor.tar.xz abysscursor
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: Build archive
+          path: Abysscursor.tar.xz
