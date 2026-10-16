@@ -10,6 +10,7 @@
 #include <cstring>
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <librsvg/rsvg.h>
 
 #include "manifest.hpp"
@@ -289,7 +290,8 @@ bool CAbysscursorManager::valid() {
 }
 
 SCursorImageData** CAbysscursorManager::getShapesC(int& outSize, const char* shape_, const SCursorStyleInfo& info) {
-    if (!shape_) {
+    outSize = 0;
+    if (!valid() || !shape_ || info.size > static_cast<unsigned int>(std::numeric_limits<int>::max() / 10)) {
         Debug::log(HC_LOG_ERR, logFn, "getShapesC: shape of nullptr is invalid");
         return nullptr;
     }
@@ -303,7 +305,7 @@ SCursorImageData** CAbysscursorManager::getShapesC(int& outSize, const char* sha
         if (REQUESTEDSHAPE != shape->directory && std::find(shape->overrides.begin(), shape->overrides.end(), REQUESTEDSHAPE) == shape->overrides.end())
             continue;
 
-        const int PIXELSIDE = std::round(info.size / shape->nominalSize);
+        const int PIXELSIDE = std::round(static_cast<double>(info.size) / shape->nominalSize);
 
         hotX = shape->hotspotX;
         hotY = shape->hotspotY;
@@ -378,7 +380,7 @@ SCursorImageData** CAbysscursorManager::getShapesC(int& outSize, const char* sha
 }
 
 SCursorRawShapeDataC* CAbysscursorManager::getRawShapeDataC(const char* shape_) {
-    if (!shape_) {
+    if (!valid() || !shape_) {
         Debug::log(HC_LOG_ERR, logFn, "getShapeDataC: shape of nullptr is invalid");
         return nullptr;
     }
@@ -414,12 +416,15 @@ SCursorRawShapeDataC* CAbysscursorManager::getRawShapeDataC(const char* shape_) 
 
         // found it
         for (auto& i : impl->loadedShapes[shape.get()].images) {
+            if (i->artificial)
+                continue;
             resultingImages.push_back(i.get());
         }
 
         data->hotspotX    = shape->hotspotX;
         data->hotspotY    = shape->hotspotY;
         data->nominalSize = shape->nominalSize;
+        data->resizeAlgo  = shape->resizeAlgo;
         data->type        = shape->shapeType == SHAPE_PNG ? HC_DATA_PNG : HC_DATA_SVG;
         break;
     }
@@ -438,6 +443,8 @@ SCursorRawShapeDataC* CAbysscursorManager::getRawShapeDataC(const char* shape_) 
 }
 
 bool CAbysscursorManager::loadThemeStyle(const SCursorStyleInfo& info) {
+    if (!valid() || info.size == 0 || info.size > static_cast<unsigned int>(std::numeric_limits<int>::max() / 10))
+        return false;
     Debug::log(HC_LOG_INFO, logFn, "loadThemeStyle: loading for size {}", info.size);
 
     for (auto& shape : impl->theme.shapes) {
@@ -450,7 +457,7 @@ bool CAbysscursorManager::loadThemeStyle(const SCursorStyleInfo& info) {
         bool sizeFound = false;
 
         if (shape->shapeType == SHAPE_PNG) {
-            const int IDEALSIDE = std::round(info.size / shape->nominalSize);
+            const int IDEALSIDE = std::round(static_cast<double>(info.size) / shape->nominalSize);
 
             for (auto& image : impl->loadedShapes[shape.get()].images) {
                 if (image->side != IDEALSIDE)
@@ -467,6 +474,8 @@ bool CAbysscursorManager::loadThemeStyle(const SCursorStyleInfo& info) {
             SLoadedCursorImage* leader    = nullptr;
             int                 leaderVal = 1000000;
             for (auto& image : impl->loadedShapes[shape.get()].images) {
+                if (image->artificial)
+                    continue;
                 if (image->side < IDEALSIDE)
                     continue;
 
@@ -479,10 +488,11 @@ bool CAbysscursorManager::loadThemeStyle(const SCursorStyleInfo& info) {
 
             if (!leader) {
                 for (auto& image : impl->loadedShapes[shape.get()].images) {
-                    if (std::abs((int)(image->side - IDEALSIDE)) > leaderVal)
+                    if (image->artificial)
+                        continue;
+                    if (leader && std::abs(image->side - IDEALSIDE) >= std::abs(leader->side - IDEALSIDE))
                         continue;
 
-                    leaderVal = image->side;
                     leader    = image.get();
                 }
             }
@@ -496,7 +506,7 @@ bool CAbysscursorManager::loadThemeStyle(const SCursorStyleInfo& info) {
 
             Debug::log(HC_LOG_TRACE, logFn, "loadThemeStyle: png shape {} has {} frames", shape->directory, FRAMES.size());
 
-            const int PIXELSIDE = std::round(info.size / shape->nominalSize);
+            const int PIXELSIDE = std::round(static_cast<double>(info.size) / shape->nominalSize);
 
             Debug::log(HC_LOG_TRACE, logFn, "loadThemeStyle: png shape has nominal {:.2f}, pixel size will be {}x", shape->nominalSize, PIXELSIDE);
 
@@ -504,9 +514,14 @@ bool CAbysscursorManager::loadThemeStyle(const SCursorStyleInfo& info) {
                 auto& newImage           = impl->loadedShapes[shape.get()].images.emplace_back(std::make_unique<SLoadedCursorImage>());
                 newImage->artificial     = true;
                 newImage->side           = PIXELSIDE;
-                newImage->artificialData = new char[static_cast<unsigned long>(PIXELSIDE * PIXELSIDE * 4)];
-                newImage->cairoSurface   = cairo_image_surface_create_for_data((unsigned char*)newImage->artificialData, CAIRO_FORMAT_ARGB32, PIXELSIDE, PIXELSIDE, PIXELSIDE * 4);
+                newImage->cairoSurface   = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, PIXELSIDE, PIXELSIDE);
                 newImage->delay          = f->delay;
+
+                if (cairo_surface_status(newImage->cairoSurface) != CAIRO_STATUS_SUCCESS) {
+                    impl->loadedShapes[shape.get()].images.pop_back();
+                    cursorSurfaceStyleDone(info);
+                    return false;
+                }
 
                 const auto PCAIRO = cairo_create(newImage->cairoSurface);
 
@@ -533,11 +548,13 @@ bool CAbysscursorManager::loadThemeStyle(const SCursorStyleInfo& info) {
                 cairo_destroy(PCAIRO);
             }
         } else if (shape->shapeType == SHAPE_SVG) {
+            const int PIXELSIDE = std::round(static_cast<double>(info.size) / shape->nominalSize);
+            const auto& images = impl->loadedShapes[shape.get()].images;
+            if (std::any_of(images.begin(), images.end(), [PIXELSIDE](const auto& image) { return image->artificial && image->side == PIXELSIDE; }))
+                continue;
             const auto FRAMES = impl->getFramesFor(shape.get(), 0);
 
             Debug::log(HC_LOG_TRACE, logFn, "loadThemeStyle: svg shape {} has {} frames", shape->directory, FRAMES.size());
-
-            const int PIXELSIDE = std::round(info.size / shape->nominalSize);
 
             Debug::log(HC_LOG_TRACE, logFn, "loadThemeStyle: svg shape has nominal {:.2f}, pixel size will be {}x", shape->nominalSize, PIXELSIDE);
 
@@ -545,9 +562,14 @@ bool CAbysscursorManager::loadThemeStyle(const SCursorStyleInfo& info) {
                 auto& newImage           = impl->loadedShapes[shape.get()].images.emplace_back(std::make_unique<SLoadedCursorImage>());
                 newImage->artificial     = true;
                 newImage->side           = PIXELSIDE;
-                newImage->artificialData = new char[static_cast<unsigned long>(PIXELSIDE * PIXELSIDE * 4)];
-                newImage->cairoSurface   = cairo_image_surface_create_for_data((unsigned char*)newImage->artificialData, CAIRO_FORMAT_ARGB32, PIXELSIDE, PIXELSIDE, PIXELSIDE * 4);
+                newImage->cairoSurface   = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, PIXELSIDE, PIXELSIDE);
                 newImage->delay          = f->delay;
+
+                if (cairo_surface_status(newImage->cairoSurface) != CAIRO_STATUS_SUCCESS) {
+                    impl->loadedShapes[shape.get()].images.pop_back();
+                    cursorSurfaceStyleDone(info);
+                    return false;
+                }
 
                 const auto PCAIRO = cairo_create(newImage->cairoSurface);
 
@@ -560,15 +582,23 @@ bool CAbysscursorManager::loadThemeStyle(const SCursorStyleInfo& info) {
                 RsvgHandle* handle = rsvg_handle_new_from_data((unsigned char*)f->data, f->dataLen, &error);
 
                 if (!handle) {
-                    Debug::log(HC_LOG_ERR, logFn, "Failed reading svg: {}", error->message);
+                    Debug::log(HC_LOG_ERR, logFn, "Failed reading svg: {}", error ? error->message : "unknown error");
+                    g_clear_error(&error);
+                    cairo_destroy(PCAIRO);
+                    impl->loadedShapes[shape.get()].images.pop_back();
+                    cursorSurfaceStyleDone(info);
                     return false;
                 }
 
                 RsvgRectangle rect = {0, 0, (double)PIXELSIDE, (double)PIXELSIDE};
 
                 if (!rsvg_handle_render_document(handle, PCAIRO, &rect, &error)) {
-                    Debug::log(HC_LOG_ERR, logFn, "Failed rendering svg: {}", error->message);
+                    Debug::log(HC_LOG_ERR, logFn, "Failed rendering svg: {}", error ? error->message : "unknown error");
+                    g_clear_error(&error);
+                    cairo_destroy(PCAIRO);
                     g_object_unref(handle);
+                    impl->loadedShapes[shape.get()].images.pop_back();
+                    cursorSurfaceStyleDone(info);
                     return false;
                 }
 
@@ -587,6 +617,8 @@ bool CAbysscursorManager::loadThemeStyle(const SCursorStyleInfo& info) {
 }
 
 void CAbysscursorManager::cursorSurfaceStyleDone(const SCursorStyleInfo& info) {
+    if (!valid() || info.size > static_cast<unsigned int>(std::numeric_limits<int>::max() / 10))
+        return;
     for (auto& shape : impl->theme.shapes) {
         if (shape->resizeAlgo == HC_RESIZE_NONE && shape->shapeType != SHAPE_SVG)
             continue;
@@ -596,7 +628,7 @@ void CAbysscursorManager::cursorSurfaceStyleDone(const SCursorStyleInfo& info) {
             const bool isArtificial = e->artificial;
 
             // clean artificial rasters made for this
-            if (isArtificial && e->side == std::round(info.size / shape->nominalSize))
+            if (isArtificial && e->side == std::round(static_cast<double>(info.size) / shape->nominalSize))
                 return true;
 
             // clean invalid non-svg rasters
@@ -621,16 +653,14 @@ PNG reading
 static cairo_status_t readPNG(void* data, unsigned char* output, unsigned int len) {
     const auto DATA = (SLoadedCursorImage*)data;
 
-    if (DATA->readNeedle >= DATA->dataLen)
+    if (DATA->readNeedle > DATA->dataLen || len > DATA->dataLen - DATA->readNeedle)
         return CAIRO_STATUS_READ_ERROR;
 
     if (!DATA->data)
         return CAIRO_STATUS_READ_ERROR;
 
-    size_t toRead = len > DATA->dataLen - DATA->readNeedle ? DATA->dataLen - DATA->readNeedle : len;
-
-    std::memcpy(output, (uint8_t*)DATA->data + DATA->readNeedle, toRead);
-    DATA->readNeedle += toRead;
+    std::memcpy(output, (uint8_t*)DATA->data + DATA->readNeedle, len);
+    DATA->readNeedle += len;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -656,7 +686,7 @@ std::optional<std::string> CAbysscursorImplementation::loadTheme() {
     const std::string CURSORSSUBDIR = manifest.parsedData.cursorsDirectory;
     const std::string CURSORDIR     = themeFullDir + "/" + CURSORSSUBDIR;
 
-    if (CURSORSSUBDIR.empty() || !std::filesystem::exists(CURSORDIR))
+    if (CURSORSSUBDIR.empty() || !std::filesystem::is_directory(CURSORDIR))
         return "loadTheme: cursors_directory missing or empty";
 
     for (auto& cursor : std::filesystem::directory_iterator(CURSORDIR)) {
@@ -670,7 +700,10 @@ std::optional<std::string> CAbysscursorImplementation::loadTheme() {
 
         // extract zip to raw data.
         int         errp = 0;
-        zip_t*      zip  = zip_open(cursor.path().string().c_str(), ZIP_RDONLY, &errp);
+        std::unique_ptr<zip_t, decltype(&zip_discard)> archive(zip_open(cursor.path().string().c_str(), ZIP_RDONLY, &errp), zip_discard);
+        zip_t* zip = archive.get();
+        if (!zip)
+            return "Failed opening cursor archive " + cursor.path().string();
 
         zip_int64_t index    = zip_name_locate(zip, "meta.hl", ZIP_FL_ENC_GUESS);
         bool        metaIsHL = true;
@@ -683,15 +716,17 @@ std::optional<std::string> CAbysscursorImplementation::loadTheme() {
         if (index == -1)
             return "cursor" + cursor.path().string() + "failed to load meta";
 
-        zip_file_t* meta_file = zip_fopen_index(zip, index, ZIP_FL_UNCHANGED);
+        std::unique_ptr<zip_file_t, decltype(&zip_fclose)> meta_file(zip_fopen_index(zip, index, ZIP_FL_UNCHANGED), zip_fclose);
+        if (!meta_file)
+            return "Failed opening cursor metadata";
 
         char*       buffer = new char[static_cast<unsigned long>(1024 * 1024)]; /* 1MB should be more than enough */
 
-        int         readBytes = zip_fread(meta_file, buffer, (1024 * 1024) - 1);
+        int         readBytes = zip_fread(meta_file.get(), buffer, (1024 * 1024) - 1);
 
-        zip_fclose(meta_file);
+        meta_file.reset();
 
-        if (readBytes < 0) {
+        if (readBytes < 0 || readBytes == (1024 * 1024) - 1) {
             delete[] buffer;
             return "cursor" + cursor.path().string() + "failed to read meta";
         }
@@ -744,20 +779,17 @@ std::optional<std::string> CAbysscursorImplementation::loadTheme() {
                 return "cursor" + cursor.path().string() + "failed to load image_file";
 
             // read from zip
-            zip_file_t* image_file = zip_fopen_index(zip, index, ZIP_FL_UNCHANGED);
-            zip_stat_index(zip, index, ZIP_FL_UNCHANGED, &sb);
+            std::unique_ptr<zip_file_t, decltype(&zip_fclose)> image_file(zip_fopen_index(zip, index, ZIP_FL_UNCHANGED), zip_fclose);
+            if (!image_file || zip_stat_index(zip, index, ZIP_FL_UNCHANGED, &sb) != 0 || !(sb.valid & ZIP_STAT_SIZE) ||
+                sb.size > static_cast<zip_uint64_t>(std::numeric_limits<zip_int64_t>::max()) || sb.size > std::numeric_limits<size_t>::max())
+                return "Failed opening cursor image";
 
-            if (sb.valid & ZIP_STAT_SIZE) {
-                IMAGE->data    = new char[sb.size + 1];
-                IMAGE->dataLen = sb.size + 1;
-            } else {
-                IMAGE->data    = new char[static_cast<unsigned long>(1024 * 1024)]; /* 1MB should be more than enough, again. This probably should be in the spec. */
-                IMAGE->dataLen = static_cast<size_t>(1024 * 1024);
-            }
-
-            IMAGE->dataLen = zip_fread(image_file, IMAGE->data, IMAGE->dataLen - 1);
-
-            zip_fclose(image_file);
+            IMAGE->data = new char[static_cast<size_t>(sb.size)];
+            const auto bytesRead = zip_fread(image_file.get(), IMAGE->data, sb.size);
+            if (bytesRead < 0 || static_cast<zip_uint64_t>(bytesRead) != sb.size)
+                return "Failed reading cursor image";
+            IMAGE->dataLen = static_cast<size_t>(bytesRead);
+            image_file.reset();
 
             Debug::log(HC_LOG_TRACE, logFn, "Cairo: set up surface read");
 
@@ -770,6 +802,8 @@ std::optional<std::string> CAbysscursorImplementation::loadTheme() {
                     IMAGE->data = nullptr;
                     return "Failed reading cairoSurface, status " + std::to_string((int)STATUS);
                 }
+                if (cairo_image_surface_get_width(IMAGE->cairoSurface) != IMAGE->side || cairo_image_surface_get_height(IMAGE->cairoSurface) != IMAGE->side)
+                    return "PNG dimensions do not match the declared square size";
             } else {
                 Debug::log(HC_LOG_TRACE, logFn, "Skipping cairo load for a svg surface");
             }
@@ -783,8 +817,6 @@ std::optional<std::string> CAbysscursorImplementation::loadTheme() {
         SHAPE->hotspotY    = meta.parsedData.hotspotY;
         SHAPE->nominalSize = meta.parsedData.nominalSize;
         SHAPE->resizeAlgo  = stringToAlgo(meta.parsedData.resizeAlgo);
-
-        zip_discard(zip);
     }
 
     return {};

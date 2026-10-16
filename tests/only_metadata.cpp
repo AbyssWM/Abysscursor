@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
             if overridenBy is empty, the current theme doesn't have this shape.
         */
         if (RAWDATA.overridenBy.empty())
-            return false;
+            return 1;
 
         /*
             load what it's overriden by.

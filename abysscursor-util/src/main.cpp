@@ -424,9 +424,17 @@ int main(int argc, char** argv, char** envp) {
         }
 
         if (arg == "-o" || arg == "--output") {
+            if (i + 1 >= argc) {
+                std::cerr << "Missing output path.\n";
+                return 1;
+            }
             out = argv[++i];
             continue;
         } else if (arg == "--resize") {
+            if (i + 1 >= argc) {
+                std::cerr << "Missing resize algorithm.\n";
+                return 1;
+            }
             explicitResizeAlgo = stringToAlgo(argv[++i]);
             continue;
         } else {

@@ -3,32 +3,21 @@
 #include <algorithm>
 
 static std::string removeBeginEndSpacesTabs(std::string str) {
-    if (str.empty())
-        return str;
-
-    int countBefore = 0;
-    while (str[countBefore] == ' ' || str[countBefore] == '\t') {
-        countBefore++;
-    }
-
-    int countAfter = 0;
-    while ((int)str.length() - countAfter - 1 >= 0 && (str[str.length() - countAfter - 1] == ' ' || str[str.length() - 1 - countAfter] == '\t')) {
-        countAfter++;
-    }
-
-    str = str.substr(countBefore, str.length() - countBefore - countAfter);
-
-    return str;
+    const auto first = str.find_first_not_of(" \t");
+    return first == std::string::npos ? "" : str.substr(first, str.find_last_not_of(" \t") - first + 1);
 }
 
 CVarList::CVarList(const std::string& in, const size_t lastArgNo, const char delim, const bool removeEmpty) {
-    if (in.empty())
-        m_vArgs.emplace_back("");
+    if (in.empty()) {
+        if (!removeEmpty)
+            m_vArgs.emplace_back("");
+        return;
+    }
 
     std::string args{in};
     size_t      idx = 0;
     size_t      pos = 0;
-    std::ranges::replace_if(args, [&](const char& c) { return delim == 's' ? std::isspace(c) : c == delim; }, 0);
+    std::ranges::replace_if(args, [&](const char& c) { return delim == 's' ? std::isspace(static_cast<unsigned char>(c)) : c == delim; }, 0);
 
     for (const auto& s : args | std::views::split(0)) {
         if (removeEmpty && s.empty())

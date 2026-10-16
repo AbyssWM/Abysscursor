@@ -86,6 +86,8 @@ namespace Abysscursor {
         CAbysscursorManager(const char* themeName, PABYSSCURSORLOGFUNC fn);
         CAbysscursorManager(const char* themeName, SManagerOptions options);
         ~CAbysscursorManager();
+        CAbysscursorManager(const CAbysscursorManager&) = delete;
+        CAbysscursorManager& operator=(const CAbysscursorManager&) = delete;
 
         /*!
             Returns true if the theme was successfully loaded,
@@ -138,6 +140,9 @@ namespace Abysscursor {
         */
         SCursorRawShapeData getRawShapeData(const char* shape_) {
             auto CDATA = getRawShapeDataC(shape_);
+
+            if (!CDATA)
+                return {};
 
             if (CDATA->overridenBy) {
                 SCursorRawShapeData d{.overridenBy = CDATA->overridenBy};

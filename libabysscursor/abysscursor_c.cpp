@@ -17,17 +17,21 @@ void abysscursor_manager_free(abysscursor_manager_t* manager) {
 
 int abysscursor_manager_valid(abysscursor_manager_t* manager) {
     const auto MGR = (CAbysscursorManager*)manager;
-    return MGR->valid();
+    return MGR && MGR->valid();
 }
 
 int abysscursor_load_theme_style(abysscursor_manager_t* manager, abysscursor_cursor_style_info info_) {
     const auto       MGR = (CAbysscursorManager*)manager;
     SCursorStyleInfo info;
     info.size = info_.size;
-    return MGR->loadThemeStyle(info);
+    return MGR && MGR->loadThemeStyle(info);
 }
 
 struct SCursorImageData** abysscursor_get_cursor_image_data(struct abysscursor_manager_t* manager, const char* shape, struct abysscursor_cursor_style_info info_, int* out_size) {
+    if (out_size)
+        *out_size = 0;
+    if (!manager || !out_size)
+        return nullptr;
     const auto       MGR = (CAbysscursorManager*)manager;
     SCursorStyleInfo info;
     info.size                      = info_.size;
@@ -38,6 +42,8 @@ struct SCursorImageData** abysscursor_get_cursor_image_data(struct abysscursor_m
 }
 
 void abysscursor_cursor_image_data_free(abysscursor_cursor_image_data** data, int size) {
+    if (!data)
+        return;
     for (int i = 0; i < size; ++i) {
         free(data[i]);
     }
@@ -49,20 +55,24 @@ void abysscursor_style_done(abysscursor_manager_t* manager, abysscursor_cursor_s
     const auto       MGR = (CAbysscursorManager*)manager;
     SCursorStyleInfo info;
     info.size = info_.size;
-    MGR->cursorSurfaceStyleDone(info);
+    if (MGR)
+        MGR->cursorSurfaceStyleDone(info);
 }
 
 void abysscursor_register_logging_function(struct abysscursor_manager_t* manager, PABYSSCURSORLOGFUNC fn) {
     const auto MGR = (CAbysscursorManager*)manager;
-    MGR->registerLoggingFunction(fn);
+    if (MGR)
+        MGR->registerLoggingFunction(fn);
 }
 
 CAPI abysscursor_cursor_raw_shape_data* abysscursor_get_raw_shape_data(struct abysscursor_manager_t* manager, char* shape) {
     const auto MGR = (CAbysscursorManager*)manager;
-    return MGR->getRawShapeDataC(shape);
+    return MGR ? MGR->getRawShapeDataC(shape) : nullptr;
 }
 
 CAPI void abysscursor_raw_shape_data_free(abysscursor_cursor_raw_shape_data* data) {
+    if (!data)
+        return;
     if (data->overridenBy) {
         free(data->overridenBy);
         delete data;

@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
     /*
         Save to disk with cairo
     */
-    const auto RET = cairo_surface_write_to_png(SHAPEDATA.images[0].surface, "/tmp/arrow.png");
+    const auto RET = cairo_surface_write_to_png(SHAPEDATA.images[0].surface, "arrow.png");
 
     std::cout << "Cairo returned for write: " << RET << "\n";
 

@@ -116,6 +116,27 @@ add_test(
   COMMAND abysscursor_test_c)
 add_dependencies(tests abysscursor_test_c)
 
+# Keep tests independent of installed cursor themes and desktop environment.
+add_executable(abysscursor_test_fixture "tests/fixture.cpp")
+target_link_libraries(abysscursor_test_fixture PRIVATE PkgConfig::deps)
+add_test(NAME "Prepare cursor fixtures" COMMAND abysscursor_test_fixture "${CMAKE_BINARY_DIR}/test-home")
+set_tests_properties("Prepare cursor fixtures" PROPERTIES FIXTURES_SETUP cursor_themes)
+add_executable(abysscursor_test_regressions "tests/regressions.cpp")
+target_link_libraries(abysscursor_test_regressions PRIVATE abysscursor)
+add_test(NAME "Cursor parser and lifecycle regressions" COMMAND abysscursor_test_regressions)
+add_dependencies(tests abysscursor_test_fixture abysscursor_test_regressions)
+add_test(NAME "CLI rejects missing output" COMMAND abysscursor-util --create unused --output)
+add_test(NAME "CLI rejects missing resize algorithm" COMMAND abysscursor-util --create unused --resize)
+set_tests_properties("CLI rejects missing output" "CLI rejects missing resize algorithm" PROPERTIES WILL_FAIL TRUE)
+set_tests_properties(
+  "Test libabysscursor in C++ (full rendering)"
+  "Test libabysscursor in C++ (only metadata)"
+  "Test libabysscursor in C"
+  "Cursor parser and lifecycle regressions"
+  PROPERTIES FIXTURES_REQUIRED cursor_themes
+             WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+             ENVIRONMENT "HOME=${CMAKE_BINARY_DIR}/test-home;XDG_DATA_HOME=${CMAKE_BINARY_DIR}/test-home/.local/share;XDG_DATA_DIRS=${CMAKE_BINARY_DIR}/test-home/system;ABYSSCURSOR_THEME=review-fixture")
+
 # Installation
 install(TARGETS abysscursor)
 install(TARGETS abysscursor-util)

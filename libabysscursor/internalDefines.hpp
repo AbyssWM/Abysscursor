@@ -8,12 +8,12 @@
 
 struct SLoadedCursorImage {
     ~SLoadedCursorImage() {
+        if (cairoSurface)
+            cairo_surface_destroy(cairoSurface);
         if (data)
             delete[] (char*)data;
         if (artificialData)
             delete[] (char*)artificialData;
-        if (cairoSurface)
-            cairo_surface_destroy(cairoSurface);
     }
 
     // read stuff

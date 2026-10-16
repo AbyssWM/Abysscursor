@@ -5,10 +5,12 @@
 #include <filesystem>
 #include <regex>
 #include <algorithm>
+#include <charconv>
+#include <cmath>
 
 #include "VarList.hpp"
 
-static CMeta* currentMeta = nullptr;
+static thread_local CMeta* currentMeta = nullptr;
 
 CMeta::CMeta(const std::string& rawdata_, bool abyssparse_ /* false for toml */, bool dataIsPath) : dataPath(dataIsPath), abyssparse(abyssparse_), rawdata(rawdata_) {
     if (!dataIsPath)
@@ -46,26 +48,21 @@ std::optional<std::string> CMeta::parse() {
 
     currentMeta = nullptr;
 
+    if (!res && (!std::isfinite(parsedData.hotspotX) || !std::isfinite(parsedData.hotspotY) || !std::isfinite(parsedData.nominalSize)))
+        return "Non-finite cursor geometry";
+    if (!res && (parsedData.hotspotX < 0.F || parsedData.hotspotX > 1.F || parsedData.hotspotY < 0.F || parsedData.hotspotY > 1.F))
+        return "Cursor hotspot must be between 0 and 1";
     return res;
 }
 
 static std::string removeBeginEndSpacesTabs(std::string str) {
-    if (str.empty())
-        return str;
+    const auto first = str.find_first_not_of(" \t");
+    return first == std::string::npos ? "" : str.substr(first, str.find_last_not_of(" \t") - first + 1);
+}
 
-    int countBefore = 0;
-    while (str[countBefore] == ' ' || str[countBefore] == '\t') {
-        countBefore++;
-    }
-
-    int countAfter = 0;
-    while ((int)str.length() - countAfter - 1 >= 0 && (str[str.length() - countAfter - 1] == ' ' || str[str.length() - 1 - countAfter] == '\t')) {
-        countAfter++;
-    }
-
-    str = str.substr(countBefore, str.length() - countBefore - countAfter);
-
-    return str;
+static bool parseNonnegativeInt(const std::string& value, int& out) {
+    const auto [end, error] = std::from_chars(value.data(), value.data() + value.size(), out);
+    return error == std::errc{} && end == value.data() + value.size() && out >= 0;
 }
 
 static Abyssparse::CParseResult parseDefineSize(const char* C, const char* V) {
@@ -82,7 +79,6 @@ static Abyssparse::CParseResult parseDefineSize(const char* C, const char* V) {
 
         auto                LHS   = removeBeginEndSpacesTabs(sizeStr.substr(0, sizeStr.find_first_of(",")));
         auto                RHS   = removeBeginEndSpacesTabs(sizeStr.substr(sizeStr.find_first_of(",") + 1));
-        auto                DELAY = 0;
 
         CMeta::SDefinedSize size;
 
@@ -90,10 +86,8 @@ static Abyssparse::CParseResult parseDefineSize(const char* C, const char* V) {
             const auto LL = removeBeginEndSpacesTabs(RHS.substr(0, RHS.find(',')));
             const auto RR = removeBeginEndSpacesTabs(RHS.substr(RHS.find(',') + 1));
 
-            try {
-                size.delayMs = std::stoull(RR);
-            } catch (std::exception& e) {
-                result.setError(e.what());
+            if (!parseNonnegativeInt(RR, size.delayMs)) {
+                result.setError("Invalid frame delay");
                 return result;
             }
 
@@ -108,10 +102,8 @@ static Abyssparse::CParseResult parseDefineSize(const char* C, const char* V) {
         size.file = RHS;
 
         if (!size.file.ends_with(".svg")) {
-            try {
-                size.size = std::stoull(LHS);
-            } catch (std::exception& e) {
-                result.setError(e.what());
+            if (!parseNonnegativeInt(LHS, size.size) || size.size == 0) {
+                result.setError("Invalid PNG size");
                 return result;
             }
         } else
@@ -177,14 +169,14 @@ std::optional<std::string> CMeta::parseTOML() {
         for (auto& o : OVERRIDESLIST) {
             const auto RESULT = ::parseOverride("define_override", o.c_str());
             if (RESULT.error)
-                throw;
+                return RESULT.getError();
         }
 
         CVarList SIZESLIST(SIZES, 0, ';', true);
         for (auto& s : SIZESLIST) {
             const auto RESULT = ::parseDefineSize("define_size", s.c_str());
             if (RESULT.error)
-                throw;
+                return RESULT.getError();
         }
 
         parsedData.resizeAlgo = MANIFEST["General"]["resize_algorithm"].value_or("");

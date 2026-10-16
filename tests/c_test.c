@@ -60,12 +60,12 @@ int main(int argc, char** argv) {
 
     int                            dataSize = 0;
     abysscursor_cursor_image_data** data     = abysscursor_get_cursor_image_data(mgr, "left_ptr", info, &dataSize);
-    if (data == NULL) {
+    if (data == NULL || dataSize <= 0) {
         printf("data failed\n");
         return 1;
     }
 
-    int ret = cairo_surface_write_to_png(data[0]->surface, "/tmp/arrowC.png");
+    int ret = cairo_surface_write_to_png(data[0]->surface, "arrowC.png");
 
     abysscursor_cursor_image_data_free(data, dataSize);
     abysscursor_style_done(mgr, info);
@@ -75,5 +75,6 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    abysscursor_manager_free(mgr);
     return 0;
 }
