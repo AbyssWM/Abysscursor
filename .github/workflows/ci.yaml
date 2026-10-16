@@ -19,7 +19,7 @@ jobs:
           pacman --noconfirm --noprogressbar -Syyu
           pacman --noconfirm --noprogressbar -S \
             base-devel cmake git ninja pkgconf clang lld libc++ \
-            pixman libzip cairo librsvg tomlplusplus gtest
+            pixman libzip cairo librsvg tomlplusplus
 
       - name: Checkout
         uses: actions/checkout@v6
@@ -84,7 +84,8 @@ jobs:
           export PATH="$PREFIX/bin:$PATH"
           export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig:$PREFIX/share/pkgconfig"
           export CMAKE_PREFIX_PATH="$PREFIX"
-          cd build && ctest --output-on-failure || true
+          export LD_LIBRARY_PATH="$PREFIX/lib:$PWD/build:$LD_LIBRARY_PATH"
+          cd build && ctest --output-on-failure
 
       - name: Install
         run: |
