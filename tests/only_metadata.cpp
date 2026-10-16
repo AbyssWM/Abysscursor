@@ -75,6 +75,5 @@ int main(int argc, char** argv) {
     for (auto& i : RAWDATA.images)
         std::cout << "left_ptr data size: " << i.data.size() << "\n";
 
-    
     return 0;
 }

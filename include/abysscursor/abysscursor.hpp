@@ -43,8 +43,8 @@ namespace Abysscursor {
         float                             hotspotX    = 0;
         float                             hotspotY    = 0;
         std::string                       overridenBy = "";
-        eAbysscursorResizeAlgo             resizeAlgo  = HC_RESIZE_NONE;
-        eAbysscursorDataType               type        = HC_DATA_PNG;
+        eAbysscursorResizeAlgo            resizeAlgo  = HC_RESIZE_NONE;
+        eAbysscursorDataType              type        = HC_DATA_PNG;
     };
 
     /*!
@@ -187,11 +187,11 @@ namespace Abysscursor {
         void registerLoggingFunction(PABYSSCURSORLOGFUNC fn);
 
       private:
-        void                       init(const char* themeName_);
+        void                        init(const char* themeName_);
 
         CAbysscursorImplementation* impl                 = nullptr;
-        bool                       finalizedAndValid    = false;
-        bool                       allowDefaultFallback = true;
+        bool                        finalizedAndValid    = false;
+        bool                        allowDefaultFallback = true;
         PABYSSCURSORLOGFUNC         logFn                = nullptr;
 
         friend class CAbysscursorImplementation;

@@ -42,12 +42,12 @@ class CAbysscursorImplementation {
     }
 
     Abysscursor::CAbysscursorManager* owner = nullptr;
-    PABYSSCURSORLOGFUNC              logFn = nullptr;
+    PABYSSCURSORLOGFUNC               logFn = nullptr;
 
-    std::string                     themeName;
-    std::string                     themeFullDir;
+    std::string                       themeName;
+    std::string                       themeFullDir;
 
-    SCursorTheme                    theme;
+    SCursorTheme                      theme;
 
     //
     std::unordered_map<SCursorShape*, SLoadedCursorShape> loadedShapes;

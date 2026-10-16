@@ -38,7 +38,7 @@ struct SCursorImage {
 struct SCursorShape {
     std::string               directory;
     float                     hotspotX = 0, hotspotY = 0, nominalSize = 1.F;
-    eAbysscursorResizeAlgo     resizeAlgo = HC_RESIZE_NEAREST;
+    eAbysscursorResizeAlgo    resizeAlgo = HC_RESIZE_NEAREST;
     std::vector<SCursorImage> images;
     std::vector<std::string>  overrides;
     eShapeType                shapeType = SHAPE_INVALID;

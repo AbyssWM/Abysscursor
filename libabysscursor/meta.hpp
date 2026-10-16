@@ -29,7 +29,7 @@ class CMeta {
     std::optional<std::string> parseHL();
     std::optional<std::string> parseTOML();
 
-    bool                       dataPath = false;
+    bool                       dataPath   = false;
     bool                       abyssparse = true;
 
     std::string                rawdata;

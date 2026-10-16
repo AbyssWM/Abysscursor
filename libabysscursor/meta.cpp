@@ -18,13 +18,13 @@ CMeta::CMeta(const std::string& rawdata_, bool abyssparse_ /* false for toml */,
 
     try {
         if (std::filesystem::exists(rawdata_ + ".hl")) {
-            rawdata  = rawdata_ + ".hl";
+            rawdata    = rawdata_ + ".hl";
             abyssparse = true;
             return;
         }
 
         if (std::filesystem::exists(rawdata_ + ".toml")) {
-            rawdata  = rawdata_ + ".toml";
+            rawdata    = rawdata_ + ".toml";
             abyssparse = false;
             return;
         }
@@ -70,9 +70,9 @@ static std::string removeBeginEndSpacesTabs(std::string str) {
 
 static Abyssparse::CParseResult parseDefineSize(const char* C, const char* V) {
     Abyssparse::CParseResult result;
-    const std::string      VALUE = V;
+    const std::string        VALUE = V;
 
-    CVarList               sizes(VALUE, 0, ';');
+    CVarList                 sizes(VALUE, 0, ';');
 
     for (const auto& sizeStr : sizes) {
         if (!sizeStr.contains(",")) {
@@ -125,9 +125,9 @@ static Abyssparse::CParseResult parseDefineSize(const char* C, const char* V) {
 
 static Abyssparse::CParseResult parseOverride(const char* C, const char* V) {
     Abyssparse::CParseResult result;
-    const std::string      VALUE = V;
+    const std::string        VALUE = V;
 
-    CVarList               overrides(VALUE, 0, ';');
+    CVarList                 overrides(VALUE, 0, ';');
 
     for (const auto& o : overrides) {
         currentMeta->parsedData.overrides.push_back(o);
