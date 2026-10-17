@@ -127,6 +127,10 @@ add_test(NAME "Cursor parser and lifecycle regressions" COMMAND abysscursor_test
 add_dependencies(tests abysscursor_test_fixture abysscursor_test_regressions)
 add_test(NAME "CLI rejects missing output" COMMAND abysscursor-util --create unused --output)
 add_test(NAME "CLI rejects missing resize algorithm" COMMAND abysscursor-util --create unused --resize)
+add_test(
+  NAME "CLI output deletion guard"
+  COMMAND ${CMAKE_COMMAND} "-DUTIL=$<TARGET_FILE:abysscursor-util>"
+          "-DTEST_ROOT=${CMAKE_BINARY_DIR}" -P "${CMAKE_SOURCE_DIR}/tests/deletion_guard.cmake")
 set_tests_properties("CLI rejects missing output" "CLI rejects missing resize algorithm" PROPERTIES WILL_FAIL TRUE)
 set_tests_properties(
   "Test libabysscursor in C++ (full rendering)"

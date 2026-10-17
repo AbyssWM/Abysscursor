@@ -49,14 +49,18 @@ static std::string removeBeginEndSpacesTabs(std::string str) {
 
 static bool promptForDeletion(const std::string& path) {
 
-    bool emptyDirectory = !std::filesystem::exists(path);
-    if (!emptyDirectory) {
-        const auto IT = std::filesystem::directory_iterator(path);
-
-        emptyDirectory = !std::count_if(std::filesystem::begin(IT), std::filesystem::end(IT), [](auto& e) { return e.is_regular_file(); });
+    bool emptyDirectory = false;
+    bool themeDirectory = false;
+    try {
+        // Every entry counts, including subdirectories and dangling symlinks.
+        emptyDirectory = !std::filesystem::exists(path) || std::filesystem::directory_iterator(path) == std::filesystem::directory_iterator{};
+        themeDirectory = std::filesystem::exists(path + "/manifest.hl") || std::filesystem::exists(path + "/manifest.toml");
+    } catch (const std::filesystem::filesystem_error& error) {
+        std::cout << "Refusing to remove " << path << " because it could not be checked: " << error.what() << '\n';
+        exit(1);
     }
 
-    if (!std::filesystem::exists(path + "/manifest.hl") && !std::filesystem::exists(path + "/manifest.toml") && std::filesystem::exists(path) && !emptyDirectory) {
+    if (!themeDirectory && !emptyDirectory) {
         std::cout << "Refusing to remove " << path << " because it doesn't look like a abysscursor theme.\n"
                   << "Please set a valid, empty, nonexistent, or a theme directory as an output path\n";
         exit(1);
